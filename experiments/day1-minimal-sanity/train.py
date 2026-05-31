@@ -17,6 +17,8 @@ def main():
     parser.add_argument("--batch_size", type=int, default=32)
     parser.add_argument("--block_size", type=int, default=128)
     parser.add_argument("--lr", type=float, default=1e-3)
+    parser.add_argument("--quant", default="bitnet", choices=["bitnet", "none"],
+                        help="'bitnet' = ternary BitLinear, 'none' = FP nn.Linear baseline")
     parser.add_argument("--log_interval", type=int, default=10, help="steps between train-loss prints")
     parser.add_argument("--eval_interval", type=int, default=100, help="steps between validation evals")
     parser.add_argument("--eval_steps", type=int, default=20)
@@ -38,8 +40,9 @@ def main():
         n_head=4,
         n_embd=256,
         dropout=0.1,
+        quant=args.quant,
     ).to(device)
-    print(f"Model params: {model.count_params():,}")
+    print(f"Model params: {model.count_params():,}  | quant={args.quant}")
 
     optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr)
 
@@ -82,8 +85,9 @@ def main():
     print(f"Total time: {time.time()-start_time:.1f}s")
 
     # Save checkpoint
-    torch.save(model.state_dict(), "checkpoint.pt")
-    print("Saved checkpoint.pt")
+    ckpt_name = f"checkpoint_{args.quant}.pt"
+    torch.save(model.state_dict(), ckpt_name)
+    print(f"Saved {ckpt_name}")
 
 
 if __name__ == "__main__":

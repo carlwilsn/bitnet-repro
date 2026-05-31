@@ -9,18 +9,28 @@ import torch.nn.functional as F
 from bitlinear import BitLinear
 
 
+def make_linear(quant, in_features, out_features, bias=False):
+    """Factory: BitLinear (ternary) when quant=='bitnet', else plain nn.Linear (FP)."""
+    if quant == "bitnet":
+        return BitLinear(in_features, out_features, bias=bias)
+    elif quant == "none":
+        return nn.Linear(in_features, out_features, bias=bias)
+    else:
+        raise ValueError(f"unknown quant mode: {quant}")
+
+
 class CausalSelfAttention(nn.Module):
-    def __init__(self, n_embd, n_head, dropout=0.1):
+    def __init__(self, n_embd, n_head, dropout=0.1, quant="bitnet"):
         super().__init__()
         assert n_embd % n_head == 0
         self.n_head = n_head
         self.n_embd = n_embd
         self.dropout = dropout
 
-        # key, query, value projections — all BitLinear
-        self.c_attn = BitLinear(n_embd, 3 * n_embd, bias=False)
+        # key, query, value projections
+        self.c_attn = make_linear(quant, n_embd, 3 * n_embd, bias=False)
         # output projection
-        self.c_proj = BitLinear(n_embd, n_embd, bias=False)
+        self.c_proj = make_linear(quant, n_embd, n_embd, bias=False)
 
         self.attn_dropout = nn.Dropout(dropout)
         self.resid_dropout = nn.Dropout(dropout)
@@ -52,12 +62,12 @@ class CausalSelfAttention(nn.Module):
 
 
 class MLP(nn.Module):
-    def __init__(self, n_embd, dropout=0.1):
+    def __init__(self, n_embd, dropout=0.1, quant="bitnet"):
         super().__init__()
         # FFN up-projection
-        self.c_fc = BitLinear(n_embd, 4 * n_embd, bias=False)
+        self.c_fc = make_linear(quant, n_embd, 4 * n_embd, bias=False)
         # FFN down-projection
-        self.c_proj = BitLinear(4 * n_embd, n_embd, bias=False)
+        self.c_proj = make_linear(quant, 4 * n_embd, n_embd, bias=False)
         self.dropout = nn.Dropout(dropout)
 
     def forward(self, x):
@@ -69,12 +79,12 @@ class MLP(nn.Module):
 
 
 class Block(nn.Module):
-    def __init__(self, n_embd, n_head, dropout=0.1):
+    def __init__(self, n_embd, n_head, dropout=0.1, quant="bitnet"):
         super().__init__()
         self.ln_1 = nn.LayerNorm(n_embd)
-        self.attn = CausalSelfAttention(n_embd, n_head, dropout)
+        self.attn = CausalSelfAttention(n_embd, n_head, dropout, quant=quant)
         self.ln_2 = nn.LayerNorm(n_embd)
-        self.mlp = MLP(n_embd, dropout)
+        self.mlp = MLP(n_embd, dropout, quant=quant)
 
     def forward(self, x):
         x = x + self.attn(self.ln_1(x))
@@ -91,14 +101,16 @@ class TinyBitGPT(nn.Module):
         n_head=4,
         n_embd=256,
         dropout=0.1,
+        quant="bitnet",
     ):
         super().__init__()
         self.block_size = block_size
+        self.quant = quant
         self.token_embedding = nn.Embedding(vocab_size, n_embd)
         self.position_embedding = nn.Embedding(block_size, n_embd)
         self.dropout = nn.Dropout(dropout)
         self.blocks = nn.ModuleList(
-            [Block(n_embd, n_head, dropout) for _ in range(n_layer)]
+            [Block(n_embd, n_head, dropout, quant=quant) for _ in range(n_layer)]
         )
         self.ln_f = nn.LayerNorm(n_embd)
         self.head = nn.Linear(n_embd, vocab_size, bias=False)
