@@ -1,3 +1,11 @@
+> ⚠️ **SUPERSEDED ON THE OPTIMIZER/SCHEDULE ROWS (2026-06-13).** The `[SECONDARY]` LR /
+> weight-decay / warmup / betas rows below were later read **first-hand** from the actual
+> Training-Tips PDF (`microsoft/unilm/.../The-Era-of-1-bit-LLMs__Training_Tips_Code_FAQ.pdf`)
+> and the original BitNet paper (arXiv 2310.11453 via ar5iv). Trust the firmed numbers in
+> **`RECIPE-GAP-AUDIT.md` §4** instead: two-stage peak LR **1.5e-3→1e-3** (700M) /
+> **1.2e-3→8e-4** (1.3B+), ≈**6×** the FP twin's 2–2.5e-4; warmup **375 steps**; two-stage WD
+> **0.1→0**; Adam β **(0.9, 0.95)**. Only the norm/embedding WD exclusion remains unverified.
+
 # 01 — Paper Recipe: What the BitNet b1.58 Papers Actually Prescribe
 
 **Scope:** The "what the paper prescribes" half of the recipe-gap audit. This is a
