@@ -89,11 +89,13 @@ Ranked on **mechanism**, not vibes. Each entry: (a) the divergence, (b) one-line
 (honest where magnitude is a guess).
 
 ### #1 — No LR schedule / warmup + the "BitNet needs a *higher* LR" rule is inverted in practice
-**(a)** Paper prescribes a two-stage LR (warmup → high peak → drop) and a load-bearing rule that
-ternary tolerates a *higher* peak LR than its FP twin ([TrainTips]/[Reloaded], SECONDARY). Our
-code runs a **constant** LR with no warmup/decay (`train.py:58`, loop `:63–70`), and the operator
-empirically *lowered* BitNet to 3e-4 to stop `1e-3` from thrashing the STE (RESULTS.md:11–14) —
-the opposite of the prescribed direction.
+**(a)** Paper prescribes a **two-stage linear-decay LR** — a standard warmup (375 steps) to a
+**higher peak (1.2–1.5e-3, ≈6× the FP twin's 2–2.5e-4)**, then decayed **midway** through training
+to a lower peak (8e-4–1e-3) — plus the load-bearing rule that ternary tolerates that higher peak
+([TrainTips] §1 + Table 2 and [BitNet] §2.2/§3.4, both **first-hand** this pass). Our code runs a
+**constant** LR with no warmup/decay (`train.py:58`, loop `:63–70`), and the operator empirically
+*lowered* BitNet to 3e-4 to stop `1e-3` from thrashing the STE (RESULTS.md:11–14) — the opposite of
+the prescribed direction.
 **(b) Mechanism:** ternary forward + STE backward makes the loss landscape noisy and the *effective*
 gradient weak (small latent-weight updates often don't flip the rounded sign). A constant, unwarmed
 LR either thrashes (too high early, before the weights organize) or stalls (too low to flip signs).
