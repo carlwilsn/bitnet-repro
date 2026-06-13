@@ -92,7 +92,8 @@ def main():
             _, loss = model(x, y)
             val_losses.append(loss.item())
     final_val = sum(val_losses) / len(val_losses)
-    print(f"\nFinal val loss: {final_val:.4f}")
+    import math
+    print(f"\nFinal val loss: {final_val:.4f} | perplexity: {math.exp(final_val):.4f}")
     print(f"Total time: {time.time()-start_time:.1f}s")
 
     # Save checkpoint
