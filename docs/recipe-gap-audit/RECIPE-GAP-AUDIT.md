@@ -222,10 +222,12 @@ UP slightly**, traded for recipe fidelity / deployability. Do **not** run this t
   **off-recipe exploration**, not a recipe-gap fix. Keeping it out of the ranked recipe list on
   purpose.
 
-- **Betas, eps, grad clipping, init, batch size, seq len are PAPER SILENT** — free reproducer
-  choices, not divergences. Our values (betas (0.9,0.999), eps 1e-8, no clip, std-0.02 init, bs 32,
-  block 128) are defensible defaults; none is a confirmed gap driver, though adding gradient clipping
-  is a cheap stability hedge that pairs naturally with the #1 LR work.
+- **Betas ARE specified — (0.9, 0.95) — but eps, grad clipping, init, batch size, seq len are
+  [TrainTips]/PAPER SILENT.** [TrainTips] Table 2 gives β **(0.9, 0.95)** first-hand; our code's
+  default **(0.9, 0.999)** is a minor, easily-fixed divergence (already a row in §2). The rest (eps
+  1e-8, no clip, std-0.02 init, bs 32, block 128) are genuinely unspecified — defensible reproducer
+  defaults, not confirmed gap drivers — though adding gradient clipping is a cheap stability hedge
+  that pairs naturally with the #1 LR work.
 
 - **"FP16" is a labeling bug, not a gap mechanism.** RESULTS.md/README call the baseline "FP16" but
   both arms run **fp32** (no autocast/GradScaler, `train.py`). This doesn't drive the gap; it just
