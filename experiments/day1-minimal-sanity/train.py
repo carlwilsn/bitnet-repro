@@ -96,7 +96,7 @@ def main():
     print(f"Total time: {time.time()-start_time:.1f}s")
 
     # Save checkpoint
-    ckpt_name = f"checkpoint_{args.quant}.pt"
+    ckpt_name = f"checkpoint_{args.quant}{('_' + args.tag) if args.tag else ''}.pt"
     torch.save(model.state_dict(), ckpt_name)
     print(f"Saved {ckpt_name}")
 
