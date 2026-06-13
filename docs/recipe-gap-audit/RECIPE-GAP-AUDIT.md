@@ -64,9 +64,9 @@ in `02-code-inventory.md`. "Diverges?" legend: **yes** (active mismatch) / **par
 | **eps** | PAPER SILENT | default 1e-8 (`train.py:58`, unset) | **silent** |
 | **Gradient clipping** | PAPER SILENT | **none** (`train.py:67–69`) | **silent** |
 | **Init (latent weights)** | PAPER SILENT | `randn*0.02` then re-init `normal_(std=0.02)` (`bitlinear.py:48`, `model.py:120–122`) | **silent** (free choice) |
-| **SubLN / norm placement** | norm **before** quant inside BitLinear (SubLN; [BitNet] Fig 1, SECONDARY); model norm RMSNorm ([b1.58] §2, QUOTED) | `nn.LayerNorm` at **block boundary**, none fused inside BitLinear; no RMSNorm, no SubLN (`model.py:84,86,115`; none in `bitlinear.py`) | **yes** |
+| **SubLN / norm placement** | norm **before** quant **inside** BitLinear — b1.58 uses a built-in **RMSNorm** in BitLinear and *removes* the pre-attention/pre-SwiGLU norm ([TrainTips] §3 code + step 2, **first-hand**; cf. SubLN in [BitNet] Fig 1) | `nn.LayerNorm` at **block boundary**, none fused inside BitLinear; no RMSNorm, no SubLN (`model.py:84,86,115`; none in `bitlinear.py`) | **yes** |
 | **λ / quant warmup** | NOT FOUND — quantized from step 0 ([b1.58] §2, QUOTED) | none — full-strength ternary from step 0 (`bitlinear.py:55–66`) | **match** (both quantize from step 0) |
-| **Mixed precision (shadow weights hi-precision)** | yes — hi-precision latent weights + grads maintained ([BitNet] abstract, SECONDARY) | latent weights kept in fp32, updated via STE (`bitlinear.py:63`) | **match** (shadow-weight contract honored) |
+| **Mixed precision (shadow weights hi-precision)** | yes — full-precision latent weights, quantized on the fly via STE detach ([TrainTips] §1 "Weight Decay" + §3 code, **first-hand**; [BitNet] §2) | latent weights kept in fp32, updated via STE (`bitlinear.py:63`) | **match** (shadow-weight contract honored) |
 | **Batch size** | PAPER SILENT for training (512 is inference-only) | 32 (`train.py:17`) | **silent** (free choice) |
 | **Sequence / block length** | PAPER SILENT for training | 128 (`train.py:18`, `model.py:99`) | **silent** (free choice) |
 | **Token budget** | 100B (RedPajama) / 2T (StableLM recipe) ([b1.58] §3, QUOTED) | ~4.1M @1k steps, ~12.3M @3k steps (`train.py:16–18`) | **yes** (different regime — tiny model, tiny budget; expected) |
