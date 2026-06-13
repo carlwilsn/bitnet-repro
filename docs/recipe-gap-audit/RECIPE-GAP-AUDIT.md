@@ -187,17 +187,28 @@ UP slightly**, traded for recipe fidelity / deployability. Do **not** run this t
 
 ## 4. Honest uncertainties (carried forward, not laundered)
 
-- **The LR and weight-decay numbers are SECONDARY, not first-hand.** The two-stage LR shape, the
-  "BitNet tolerates a higher peak LR" rule, the ~0.1→0 two-stage weight decay, and the implied AdamW
-  optimizer all come **only** from the authors' **"Training Tips, Code and FAQ" companion** — which
-  `01-paper-recipe.md` read **second-hand** this pass (via a hosted/third-party copy), **not** from
-  the actual `The-Era-of-1-bit-LLMs__Training_Tips_Code_FAQ.pdf`. The **primary** b1.58 paper
-  (arXiv 2402.17764, read in full) contains **no LR, no WD, no warmup, no optimizer, no batch size**.
-  So #1 and #2 above rest on **unverified** numbers — the *direction* (warmup good, don't decay
-  norms/embeddings, ternary likes a bigger LR) is well-corroborated, but the **exact peak LR, drop
-  step, stage-1 WD value, and the step it zeroes** are NOT ground truth. **Before treating any of
-  these as settled, open the actual Training-Tips PDF and replace the SECONDARY rows with first-hand
-  quotes.**
+- **The LR and weight-decay numbers are now FIRST-HAND (resolved this pass).** The two-stage LR
+  shape, the "BitNet tolerates a higher peak LR" rule, the 0.1→0 two-stage weight decay, the warmup,
+  the betas, and the AdamW optimizer were all confirmed against the **actual** authors' artifacts:
+  - **[TrainTips]** = "The Era of 1-bit LLMs: Training Tips, Code and FAQ" (Ma, Wang, Wei / BitNet
+    Team), read **first-hand** from the official PDF in `microsoft/unilm`
+    (`raw.githubusercontent.com/microsoft/unilm/master/bitnet/The-Era-of-1-bit-LLMs__Training_Tips_Code_FAQ.pdf`).
+    Its **Table 2** gives the exact b1.58 recipe: two-stage peak LR **1.5e-3→1e-3** (700M) and
+    **1.2e-3→8e-4** (1.3B/3B/3.9B); two-stage WD **0.1→0**; warmup **375 steps**; Adam β **(0.9, 0.95)**.
+    §1 confirms the two-stage *linear-decay* schedule (decay **midway**), the higher-peak-than-FP rule
+    (the FP LLaMA twin uses **2–2.5e-4**, i.e. BitNet runs ≈**6×** higher), and the latent-weight
+    "confidence score" rationale for disabling WD in the second half.
+  - **[BitNet]** = arXiv **2310.11453** (original BitNet, W1A8), read **first-hand** via ar5iv. §2.2
+    "Large learning rate" + §3.4 stability test (Fig 5) state the higher-LR rule verbatim; its
+    Appendix Tables 5–7 give per-size LRs (125M=2.4e-3 … 760M=1e-3 … 1.3B=8e-4), warmup 750, WD 0.01,
+    Adam β (0.9, 0.98), polynomial decay — note these are the **b1** numbers and differ from the
+    **b1.58** recipe above (b1.58 = 375 warmup, WD 0.1→0, β (0.9,0.95), two-stage linear decay).
+  - The **primary** b1.58 paper (arXiv 2402.17764) still contains **no** optimizer recipe — the
+    recipe lives entirely in the [TrainTips] companion, which is now read directly rather than via a
+    third-party copy. **#1 and #2 above no longer rest on unverified numbers.**
+  - **STILL UNVERIFIED:** the **WD param-group exclusions** (norms/embeddings) in #2's experiment are
+    *not* stated in [TrainTips] — that exclusion is LLaMA convention, kept as an `[UNVERIFIED / convention]`
+    design choice, not a first-hand recipe item.
 
 - **Activation-quant ranking is deliberately #6, not #1.** Our code is **W1.58A16** (weight-only),
   an *easier* task than the paper's **W1.58A8**. A *missing* activation quant does **not** explain a
