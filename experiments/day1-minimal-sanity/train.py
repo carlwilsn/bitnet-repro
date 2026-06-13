@@ -22,10 +22,21 @@ def main():
     parser.add_argument("--log_interval", type=int, default=10, help="steps between train-loss prints")
     parser.add_argument("--eval_interval", type=int, default=100, help="steps between validation evals")
     parser.add_argument("--eval_steps", type=int, default=20)
+    parser.add_argument("--seed", type=int, default=1337,
+                        help="seed for torch RNG (model init + batch sampling) so A/B arms are RNG-clean")
+    parser.add_argument("--tag", default="",
+                        help="optional suffix for the checkpoint filename to avoid arm collisions")
     args = parser.parse_args()
+
+    # Seed-lock: torch.manual_seed governs both _init_weights (normal_) and
+    # get_batch's torch.randint, so two arms with the same seed see identical
+    # init and identical batch order -> the only variable left is the code path.
+    torch.manual_seed(args.seed)
 
     device = args.device
     print(f"Using device: {device}")
+    print(f"Config: quant={args.quant} lr={args.lr} steps={args.steps} seed={args.seed} "
+          f"batch={args.batch_size} block={args.block_size}")
 
     # Load data
     train_data, val_data, vocab_size, encode, decode = get_dataset()
