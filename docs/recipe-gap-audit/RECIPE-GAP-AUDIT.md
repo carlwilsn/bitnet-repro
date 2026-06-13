@@ -144,9 +144,11 @@ which would confirm the residual is scale, not recipe. **Direction:** wider ⇒ 
 **Magnitude:** unknown — this is what we're trying to *characterize*, not eliminate.
 
 ### #4 — No SubLN / norm fused before the BitLinear matmul (+ LayerNorm instead of RMSNorm)
-**(a)** Paper places a normalization **inside** BitLinear before quantization (SubLN; [BitNet] Fig 1)
-and uses RMSNorm model-wide. Our LayerNorm sits at the **block boundary**, with nothing normalizing
-activations immediately in front of the quantized matmul (`model.py:84,86` vs `bitlinear.py`).
+**(a)** Paper places a normalization **inside** BitLinear before quantization — the [TrainTips] §3
+reference code shows a **built-in RMSNorm inside BitLinear** and step 2 explicitly *removes* the
+pre-attention / pre-SwiGLU norms because BitLinear now carries its own (**first-hand**; cf. SubLN in
+[BitNet] Fig 1). Our LayerNorm sits at the **block boundary**, with nothing normalizing activations
+immediately in front of the quantized matmul (`model.py:84,86` vs `bitlinear.py`).
 **(b) Mechanism:** SubLN stabilizes the *scale* of activations entering the quantizer, which keeps
 γ and the rounding well-conditioned and steadies STE gradients. Without it, activation scale drifts
 and the (already absent) activation quant would be ill-conditioned; even weight-only, the matmul
