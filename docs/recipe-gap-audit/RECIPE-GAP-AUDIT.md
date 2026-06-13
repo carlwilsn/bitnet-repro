@@ -112,9 +112,11 @@ configuration is a *known* thrash/stall regime, not a tuned one. Most uncertain 
 the warmup itself is high-confidence-positive.
 
 ### #2 — Weight decay 0.01 applied to *everything* (norms + embeddings included), and not two-staged
-**(a)** Paper uses a **two-stage WD (~0.1 → 0)** ([TrainTips] "Fig 1d", SECONDARY) and is **silent**
-on exclusions; standard practice excludes norms/embeddings. Our code applies a flat **0.01 to every
-parameter** including LayerNorm gains and both embedding tables (`train.py:58`, no param grouping).
+**(a)** Paper uses a **two-stage WD: 0.1 → 0** — stage-1 = 0.1 (following LLaMA), then **disabled
+for the second half** of training ([TrainTips] §1 "Weight Decay" + Table 2 / Fig 1d, **first-hand**
+this pass) — and is **silent on param exclusions** (the norms/embeddings exclusion is LLaMA
+convention, *not* stated in TrainTips; see §4). Our code applies a flat **0.01 to every parameter**
+including LayerNorm gains and both embedding tables (`train.py:58`, no param grouping).
 **(b) Mechanism:** decaying LayerNorm gains and embeddings pulls them toward zero with no
 counterbalancing signal, shrinking representation scale — especially damaging when the *only*
 full-precision capacity left in the BitNet arm lives in the norms, embeddings, and LM head (the
