@@ -121,7 +121,10 @@ including LayerNorm gains and both embedding tables (`train.py:58`, no param gro
 counterbalancing signal, shrinking representation scale — especially damaging when the *only*
 full-precision capacity left in the BitNet arm lives in the norms, embeddings, and LM head (the
 projections are ternary). Decaying exactly those FP escape-valves disproportionately hurts the
-ternary arm relative to FP.
+ternary arm relative to FP. ([TrainTips] §1 gives the authors' own **first-hand** rationale for the
+two-stage schedule: the latent-weight *magnitude* acts as a **confidence score** for the 1-bit
+weight, so a large WD lowers confidence and makes the ternary signs flip too often — hence they
+disable WD for the second half to let the model converge rather than keep flipping.)
 **(c) Experiment:** split `model.parameters()` into decay / no-decay groups in `train.py:58`
 (exclude all LayerNorm params + both `nn.Embedding` tables, keep decay on the BitLinear/Linear
 weights), and test `weight_decay=0` vs `0.1` on the decay group. **Direction:** lower BitNet loss.
