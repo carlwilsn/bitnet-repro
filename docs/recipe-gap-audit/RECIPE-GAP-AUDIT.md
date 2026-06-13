@@ -59,8 +59,8 @@ in `02-code-inventory.md`. "Diverges?" legend: **yes** (active mismatch) / **par
 | **"BitNet wants higher LR than FP" rule** | explicit, load-bearing — [BitNet] §2.2 / §3.4 (**first-hand**): "BitNet benefits from a large learning rate… while the FP16 Transformer diverges at the beginning of training with the same learning rate"; [TrainTips] Table 2 quantifies it at **≈6×** the FP peak (**first-hand**) | same LR both arms; operator *manually* dropped BitNet to 3e-4 to stop thrash (RESULTS.md:11–14) | **yes** — code goes the *wrong direction* (lowered, not raised) |
 | **Weight decay (value)** | **two-stage: 0.1 → 0** (stage-1 = 0.1 following LLaMA; disabled for the second half) ([TrainTips] §1 "Weight Decay" + Table 2 / Fig 1d, **first-hand**) | flat default 0.01, never staged (`train.py:58`, no `weight_decay=`) | **partial/yes** — wrong value, no staging |
 | **WD param exclusions** | PAPER SILENT (norms/emb exclusion not prescribed; LLaMA convention only) | **none** — flat 0.01 on *every* param incl. norms & embeddings (`train.py:58`) | **silent** (vs convention) — code decays things usually excluded |
-| **Optimizer** | AdamW (implied, [TrainTips] SECONDARY) | `torch.optim.AdamW` (`train.py:58`) | **match** |
-| **Betas** | PAPER SILENT (neither (0.9,0.95) nor (0.9,0.999) prescribed) | default (0.9, 0.999) (`train.py:58`, unset) | **silent** (free choice) |
+| **Optimizer** | AdamW (Table 2 reports Adam β **with** weight decay 0.1 → AdamW) ([TrainTips] Table 2, **first-hand**) | `torch.optim.AdamW` (`train.py:58`) | **match** |
+| **Betas** | **(0.9, 0.95)** ([TrainTips] Table 2, **first-hand**) | default (0.9, 0.999) (`train.py:58`, unset) | **partial** — (0.9, 0.999) vs prescribed (0.9, 0.95); minor |
 | **eps** | PAPER SILENT | default 1e-8 (`train.py:58`, unset) | **silent** |
 | **Gradient clipping** | PAPER SILENT | **none** (`train.py:67–69`) | **silent** |
 | **Init (latent weights)** | PAPER SILENT | `randn*0.02` then re-init `normal_(std=0.02)` (`bitlinear.py:48`, `model.py:120–122`) | **silent** (free choice) |
