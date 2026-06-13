@@ -102,8 +102,11 @@ LR either thrashes (too high early, before the weights organize) or stalls (too 
 Warmup tames the early-step STE noise; a high-then-dropped peak lets weights flip then settle. This
 is the single most-cited BitNet recipe fact and our most direct mismatch.
 **(c) Experiment:** add a warmup+cosine (or two-stage) scheduler in `train.py` around the optimizer
-at `:58` and step it in the loop after `:69`. Sweep peak LR ∈ {1e-3, 3e-3, 6e-3, 1e-2} with
-~5–10% warmup steps, BitNet arm only. **Direction:** lower BitNet val loss. **Magnitude (guess):**
+at `:58` and step it in the loop after `:69`. Sweep peak LR around the paper's first-hand value —
+e.g. {1e-3, 1.5e-3, 3e-3, 6e-3} (the b1.58 peak is **1.2–1.5e-3**; note [Reloaded]'s 1e-2 is ~7×
+above what the authors actually used) — with a short warmup (paper used **375 steps ≈ 0.4%** of its
+~100K-step run; 1–5% is a reasonable tiny-run analog), BitNet arm only. **Direction:** lower BitNet
+val loss. **Magnitude (guess):**
 this is the biggest single suspect — plausibly **0.3–0.8** off the 2.80, because the current
 configuration is a *known* thrash/stall regime, not a tuned one. Most uncertain part is the peak;
 the warmup itself is high-confidence-positive.
